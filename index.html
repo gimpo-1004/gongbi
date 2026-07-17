@@ -214,6 +214,13 @@
             </div>
         </div>
 
+        <!-- 검색창 -->
+        <div style="margin-bottom: 20px;">
+            <input type="text" id="searchInput" placeholder="아파트/오피스텔 이름 검색..." 
+                   oninput="searchApt()" 
+                   style="width: 100%; padding: 15px; border-radius: 12px; border: none; background: #333; color: white; font-size: 1rem; box-sizing: border-box;">
+        </div>
+
         <!-- 버튼/정보가 생기는 구역 (지역, 형태, 아파트, 동 선택) -->
         <div id="menuZone">
             <div class="menu-title" id="menuTitle">단계 선택</div>
@@ -237,7 +244,6 @@
     </div>
 
     <script>
-        // ★ [데이터 보관소] 원하는 곳에만 맨 끝에 img: "이미지이름" 을 자유롭게 적어주세요!
         const deliveryData = [
             { region: "양촌읍", type: "아파트", name: "LH 5단지", dong: "공통", pw: "5725", memo: "비번 바뀌면 알려주세요" },
             { region: "양촌읍", type: "아파트", name: "더숲 3단지", dong: "공통", pw: "10#0490", memo: "비번 바뀌면 알려주세요" },
@@ -336,6 +342,76 @@
             showStep1();
         }
 
+        // 🔍 실시간 통합 검색 기능 (전체 데이터 대상)
+        function searchApt() {
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+            const menuTitle = document.getElementById('menuTitle');
+            const buttonGrid = document.getElementById('buttonGrid');
+            const pathDisplay = document.getElementById('pathDisplay');
+
+            // 검색어가 비어 있으면 현재 보던 단계 페이지 복원
+            if (query === "") {
+                if (currentStep === 1) showStep1();
+                else if (currentStep === 2) showStep2();
+                else if (currentStep === 3) showStep3();
+                else if (currentStep === 4) showStep4();
+                else if (currentStep === 5) showStep5();
+                return;
+            }
+
+            // 검색어 입력 시 결과 뷰 창은 닫고 메뉴 그리드를 오픈
+            document.getElementById('menuZone').style.display = "block";
+            document.getElementById('resultZone').style.display = "none";
+            
+            menuTitle.innerText = `🔍 "${query}" 검색 결과`;
+            pathDisplay.innerText = "통합 검색 중...";
+
+            // 전체 데이터 중 건물 이름(name)에 검색어가 포함된 것 필터링 (이름 없는 빈 데이터 제외)
+            const filtered = deliveryData.filter(item => 
+                item.name && item.name.toLowerCase().includes(query)
+            );
+
+            // 중복 출력 방지 (지역 + 형태 + 건물명 조합 기준)
+            const uniqueResults = [];
+            const seen = new Set();
+
+            filtered.forEach(item => {
+                const key = `${item.region}|${item.type}|${item.name}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    uniqueResults.push(item);
+                }
+            });
+
+            if (uniqueResults.length === 0) {
+                buttonGrid.innerHTML = `<div style="grid-column: span 2; text-align:center; color:#aaa; padding:20px;">검색 결과가 없습니다.</div>`;
+                return;
+            }
+
+            // 매칭된 검색 리스트 버튼 렌더링
+            let html = "";
+            uniqueResults.forEach(item => {
+                html += `
+                    <button class="btn-menu" style="font-size:0.9rem; padding: 15px 8px; text-align:left;" 
+                            onclick="clickSearchResult('${item.region}', '${item.type}', '${item.name}')">
+                        <span style="color:#00e676; font-size:0.75rem;">[${item.region} ${item.type}]</span><br>
+                        ${item.name}
+                    </button>
+                `;
+            });
+            buttonGrid.innerHTML = html;
+        }
+
+        // 검색된 항목 선택 시 해당 아파트 상세 특이사항(Step 4)으로 직행
+        function clickSearchResult(region, type, name) {
+            selectedRegion = region;
+            selectedType = type;
+            selectedName = name;
+            
+            document.getElementById('searchInput').value = ""; // 검색창 리셋
+            showStep4();
+        }
+
         // 1단계: 지역 선택
         function showStep1() {
             currentStep = 1;
@@ -393,7 +469,9 @@
             
             let html = "";
             names.forEach(n => {
-                html += `<button class="btn-menu" style="font-size:0.95rem;" onclick="selectName('${n}')">${n}</button>`;
+                if(n) { 
+                    html += `<button class="btn-menu" style="font-size:0.95rem;" onclick="selectName('${n}')">${n}</button>`;
+                }
             });
             document.getElementById('buttonGrid').innerHTML = html;
         }
@@ -419,7 +497,6 @@
             let html = "";
 
             if (commonData) {
-                // 공통 데이터에 이미지가 적혀있다면 이미지 보여주기
                 let imgHtml = "";
                 if (commonData.img) {
                     imgHtml = `
@@ -432,7 +509,7 @@
                 html += `
                     <div class="common-pw-box">
                         <div class="common-title">📢 전동 공통 비밀번호</div>
-                        <div class="common-pw">🔑 ${commonData.pw}</div>
+                        <div class="common-pw">🔑 ${commonData.pw ? commonData.pw : '없음'}</div>
                         <div class="common-memo">💡 ${commonData.memo}</div>
                         ${imgHtml}
                     </div>
@@ -469,7 +546,6 @@
                 document.getElementById('resPw').innerText = `🔑 ${finalData.pw}`;
                 document.getElementById('resMemo').innerText = `💡 ${finalData.memo}`;
 
-                // 최종 화면(Step 5)에 이미지 표시 여부 결정
                 const resImgContainer = document.getElementById('resImgContainer');
                 const resImg = document.getElementById('resImg');
                 if (finalData.img) {
@@ -482,6 +558,9 @@
         }
 
         function goBack() {
+            if (document.getElementById('searchInput').value !== "") {
+                document.getElementById('searchInput').value = "";
+            }
             if (currentStep === 2) showStep1();
             else if (currentStep === 3) showStep2();
             else if (currentStep === 4) showStep3();
@@ -489,6 +568,7 @@
         }
 
         function resetToHome() {
+            document.getElementById('searchInput').value = "";
             showStep1();
         }
 
