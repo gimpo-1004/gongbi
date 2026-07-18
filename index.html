@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>김포 비번 모음집</title>
+    <title>김포 비번 모음집 (동근이꽈리)</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
@@ -158,7 +158,7 @@
             border-left: 6px solid #00e676;
             border-radius: 12px;
             padding: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            box-shadow: 0 4px 10 rgba(0,0,0,0.4);
         }
 
         .card-header {
@@ -200,6 +200,46 @@
             border-radius: 8px;
             line-height: 1.4;
         }
+
+        /* 📢 [추가] 공지사항 상단 바 스타일 */
+        .notice-box {
+            background-color: #1e1e1e;
+            border: 2px solid #ff9100;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        .notice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .notice-title {
+            font-size: 0.95rem;
+            color: #ff9100;
+            font-weight: 700;
+        }
+
+        .btn-notice-close {
+            background: none;
+            border: none;
+            color: #aaa;
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 0 5px;
+        }
+
+        .notice-content {
+            font-size: 0.95rem;
+            color: #ffffff;
+            line-height: 1.5;
+            white-space: pre-line;
+        }
     </style>
 </head>
 <body>
@@ -212,6 +252,15 @@
                 <button class="btn-control" onclick="goBack()">◀ 뒤로가기</button>
                 <button class="btn-control" style="background-color: #b71c1c;" onclick="resetToHome()">🏠 처음으로</button>
             </div>
+        </div>
+
+        <!-- 📢 [추가] 공지사항 구역 -->
+        <div class="notice-box" id="noticeZone">
+            <div class="notice-header">
+                <div class="notice-title">📢 필독 공지사항</div>
+                <button class="btn-notice-close" onclick="closeNotice()">✕</button>
+            </div>
+            <div class="notice-content" id="noticeContent">일 나와라 고지훈 이형인</div>
         </div>
 
         <!-- 검색창 -->
@@ -343,6 +392,11 @@
         let selectedType = "";
         let selectedName = "";
         let selectedDong = "";
+
+        // 📢 [추가] 공지사항 닫기 함수
+        function closeNotice() {
+            document.getElementById('noticeZone').style.display = 'none';
+        }
 
         function initApp() {
             showStep1();
